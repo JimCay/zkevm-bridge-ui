@@ -12,4 +12,8 @@ const isTokenEther = (token: Token): boolean => {
   return token.address === ethersConstants.AddressZero;
 };
 
-export { isTokenEther, selectTokenAddress };
+const isWrapTokenEther = (token: Token): boolean => {
+  return token.wrappedToken?.address === ethersConstants.AddressZero;
+};
+
+export { isTokenEther, selectTokenAddress,isWrapTokenEther };

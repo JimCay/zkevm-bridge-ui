@@ -1,16 +1,16 @@
-import { BigNumber } from "ethers";
+import { BigNumber,ethers } from "ethers";
 import { FC, useCallback, useEffect, useState } from "react";
 
 import { addCustomToken, getChainCustomTokens, removeCustomToken } from "src/adapters/storage";
 import { ReactComponent as ArrowDown } from "src/assets/icons/arrow-down.svg";
 import { ReactComponent as CaretDown } from "src/assets/icons/caret-down.svg";
-import { getEtherToken } from "src/constants";
+import { getEtherToken,getNativeErc20Token } from "src/constants";
 import { useEnvContext } from "src/contexts/env.context";
 import { useProvidersContext } from "src/contexts/providers.context";
 import { useTokensContext } from "src/contexts/tokens.context";
 import { AsyncTask, Chain, FormData, Token } from "src/domain";
 import { useCallIfMounted } from "src/hooks/use-call-if-mounted";
-import { isTokenEther, selectTokenAddress } from "src/utils/tokens";
+import { isTokenEther, isWrapTokenEther,selectTokenAddress } from "src/utils/tokens";
 import { isAsyncTaskDataAvailable } from "src/utils/types";
 import { AmountInput } from "src/views/home/components/amount-input/amount-input.view";
 import { useBridgeFormStyles } from "src/views/home/components/bridge-form/bridge-form.styles";
@@ -124,7 +124,8 @@ export const BridgeForm: FC<BridgeFormProps> = ({ account, formData, onResetForm
 
   const getTokenBalance = useCallback(
     (token: Token, chain: Chain): Promise<BigNumber> => {
-      if (isTokenEther(token)) {
+      if ((isTokenEther(token) && chain.chainId === token.chainId)||
+          (chain.chainId != token.chainId && isWrapTokenEther(token))){
         return chain.provider.getBalance(account);
       } else {
         return getErc20TokenBalance({
@@ -137,11 +138,19 @@ export const BridgeForm: FC<BridgeFormProps> = ({ account, formData, onResetForm
     [account, getErc20TokenBalance]
   );
 
+
   useEffect(() => {
     // Load all the tokens for the selected chain without their balance
     if (selectedChains && defaultTokens) {
       const { from } = selectedChains;
-      const chainTokens = [...getChainCustomTokens(from), ...defaultTokens];
+      let chainTokens = [...getChainCustomTokens(from), ...defaultTokens];
+      chainTokens.map((token,i)=>{
+          if(token.address === ethers.constants.AddressZero 
+            || token.wrappedToken?.address === ethers.constants.AddressZero){
+                chainTokens.splice(i,1)
+            }
+      });
+      chainTokens = [getEtherToken(from),getNativeErc20Token(from)]
 
       setTokens(
         chainTokens.map((token) => ({
@@ -209,7 +218,6 @@ export const BridgeForm: FC<BridgeFormProps> = ({ account, formData, onResetForm
     if (selectedChains && token) {
       setBalanceFrom({ status: "loading" });
       setBalanceTo({ status: "loading" });
-
       getTokenBalance(token, selectedChains.from)
         .then((balance) =>
           callIfMounted(() => {
@@ -221,7 +229,7 @@ export const BridgeForm: FC<BridgeFormProps> = ({ account, formData, onResetForm
             setBalanceFrom({ error: "Couldn't retrieve token balance", status: "failed" });
           });
         });
-      getTokenBalance(token, selectedChains.to)
+        getTokenBalance(token, selectedChains.to)
         .then((balance) =>
           callIfMounted(() => {
             setBalanceTo({ data: balance, status: "successful" });

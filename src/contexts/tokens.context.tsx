@@ -1,6 +1,6 @@
 import { Web3Provider } from "@ethersproject/providers";
 import axios from "axios";
-import { BigNumber, constants as ethersConstants } from "ethers";
+import { BigNumber, ethers, constants as ethersConstants } from "ethers";
 import {
   FC,
   PropsWithChildren,
@@ -17,7 +17,7 @@ import * as ethereum from "src/adapters/ethereum";
 import { cleanupCustomTokens, getCustomTokens } from "src/adapters/storage";
 import { getEthereumErc20Tokens } from "src/adapters/tokens";
 import tokenIconDefaultUrl from "src/assets/icons/tokens/erc20-icon.svg";
-import { getEtherToken } from "src/constants";
+import { getEtherToken ,getNativeErc20Token} from "src/constants";
 import { useEnvContext } from "src/contexts/env.context";
 import { useErrorContext } from "src/contexts/error.context";
 import { useProvidersContext } from "src/contexts/providers.context";
@@ -159,26 +159,37 @@ const TokensProvider: FC<PropsWithChildren> = (props) => {
           token.chainId === ethereumChain.chainId ? ethereumChain : polygonZkEVMChain;
         const wrappedChain =
           nativeChain.chainId === ethereumChain.chainId ? polygonZkEVMChain : ethereumChain;
-
-        return computeWrappedTokenAddress({
-          nativeChain,
-          otherChain: wrappedChain,
-          token,
-        })
-          .then((wrappedAddress) => {
-            const newToken: Token = {
-              ...token,
-              wrappedToken: {
-                address: wrappedAddress,
-                chainId: wrappedChain.chainId,
-              },
-            };
-            return newToken;
+        if (token.address == ethereumChain.btcAddress){
+          const newToken: Token = {
+            ...token,
+            wrappedToken: {
+              address: ethers.constants.AddressZero,
+              chainId: wrappedChain.chainId,
+            },
+          };
+          return Promise.resolve(newToken);
+        }else{
+          return computeWrappedTokenAddress({
+            nativeChain,
+            otherChain: wrappedChain,
+            token,
           })
-          .catch((e) => {
-            notifyError(e);
-            return Promise.resolve(token);
-          });
+            .then((wrappedAddress) => {
+              const newToken: Token = {
+                ...token,
+                wrappedToken: {
+                  address: wrappedAddress,
+                  chainId: wrappedChain.chainId,
+                },
+              };
+              return newToken;
+            })
+            .catch((e) => {
+              notifyError(e);
+              return Promise.resolve(token);
+            });
+        }
+        
       }
     },
     [env, computeWrappedTokenAddress, notifyError]
@@ -254,7 +265,8 @@ const TokensProvider: FC<PropsWithChildren> = (props) => {
           (token.address === tokenOriginAddress && token.chainId === chain.chainId) ||
           (token.wrappedToken &&
             token.wrappedToken.address === tokenOriginAddress &&
-            token.wrappedToken.chainId === chain.chainId)
+            token.wrappedToken.chainId === chain.chainId) ||
+          (chain.networkId === originNetwork && tokenOriginAddress === ethers.constants.AddressZero)
       );
 
       if (token) {
@@ -321,7 +333,7 @@ const TokensProvider: FC<PropsWithChildren> = (props) => {
               .map((token) => addWrappedToken({ token }))
           )
             .then((chainTokens) => {
-              const tokens = [getEtherToken(ethereumChain), ...chainTokens];
+              const tokens = [getEtherToken(ethereumChain),getNativeErc20Token(ethereumChain), ...chainTokens];
               cleanupCustomTokens(tokens);
               setTokens(tokens);
             })

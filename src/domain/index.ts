@@ -21,11 +21,15 @@ export interface CommonChain {
 }
 
 export type EthereumChain = CommonChain & {
+  btcAddress: string;
+  calcAddress: string;
   key: "ethereum";
   poeContractAddress: string;
 };
 
 export type ZkEVMChain = CommonChain & {
+  btcAddress:string;
+  calcAddress: string;
   key: "polygon-zkevm";
 };
 

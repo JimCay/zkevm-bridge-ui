@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import { ReactComponent as EthChainIcon } from "src/assets/icons/chains/ethereum.svg";
 import { ReactComponent as PolygonZkEVMChainIcon } from "src/assets/icons/chains/polygon-zkevm.svg";
 import { Chain, Currency, EthereumChain, ProviderError, Token, ZkEVMChain } from "src/domain";
+import { Bridge__factory } from "src/types/contracts/bridge";
 import { ProofOfEfficiency__factory } from "src/types/contracts/proof-of-efficiency";
 import { getEthereumNetworkName } from "src/utils/labels";
 
@@ -59,7 +60,10 @@ export const GAS_PRICE_INCREASE_PERCENTAGE = 50; // 50%
 export const DEPOSIT_CHECK_WORD = "I understand";
 
 export const ETH_TOKEN_LOGO_URI =
-  "https://raw.githubusercontent.com/Uniswap/interface/main/src/assets/images/ethereum-logo.png";
+  "https://avatars.githubusercontent.com/u/6250754?s=200&v=4";
+
+export const BTC_TOKEN_LOGO_URI =
+  "https://assets-cdn.trustwallet.com/blockchains/ethereum/assets/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599/logo.png";
 
 export const POLYGON_SUPPORT_URL = "https://support.polygon.technology";
 
@@ -83,6 +87,7 @@ export const getChains = ({
 }: {
   ethereum: {
     bridgeContractAddress: string;
+    btcAddress: string;
     explorerUrl: string;
     poeContractAddress: string;
     rpcUrl: string;
@@ -101,13 +106,27 @@ export const getChains = ({
     ethereumProvider
   );
 
+  const bridgeContract = Bridge__factory.connect(
+    polygonZkEVM.bridgeContractAddress,
+    polygonZkEVMProvider
+  );
+
   return Promise.all([
     ethereumProvider.getNetwork().catch(() => Promise.reject(ProviderError.Ethereum)),
     polygonZkEVMProvider.getNetwork().catch(() => Promise.reject(ProviderError.PolygonZkEVM)),
     poeContract.networkName().catch(() => Promise.reject(ProviderError.Ethereum)),
-  ]).then(([ethereumNetwork, polygonZkEVMNetwork, polygonZkEVMNetworkName]) => [
+    bridgeContract.precalculatedWrapperAddress(
+      0,
+      ethereum.btcAddress,
+      "Ether",
+      "ETH",
+      18
+    ).catch(() => Promise.reject(ProviderError.PolygonZkEVM)),
+  ]).then(([ethereumNetwork, polygonZkEVMNetwork, polygonZkEVMNetworkName,btcErc20]) => [
     {
       bridgeContractAddress: ethereum.bridgeContractAddress,
+      btcAddress: ethereum.btcAddress,
+      calcAddress: btcErc20,
       chainId: ethereumNetwork.chainId,
       explorerUrl: ethereum.explorerUrl,
       Icon: EthChainIcon,
@@ -124,6 +143,8 @@ export const getChains = ({
     },
     {
       bridgeContractAddress: polygonZkEVM.bridgeContractAddress,
+      btcAddress:ethereum.btcAddress,
+      calcAddress: btcErc20,
       chainId: polygonZkEVMNetwork.chainId,
       explorerUrl: polygonZkEVM.explorerUrl,
       Icon: PolygonZkEVMChainIcon,
@@ -131,8 +152,8 @@ export const getChains = ({
       name: polygonZkEVMNetworkName,
       nativeCurrency: {
         decimals: 18,
-        name: "Ether",
-        symbol: "ETH",
+        name: "tBTC v2",
+        symbol: "tBTC",
       },
       networkId: polygonZkEVM.networkId,
       provider: polygonZkEVMProvider,
@@ -140,15 +161,64 @@ export const getChains = ({
   ]);
 };
 
+export const getNativeErc20Token = (chain: Chain): Token => {
+  if (chain.key == "ethereum"){
+    return {
+      address: chain.btcAddress,
+      chainId: chain.chainId,
+      decimals: 18,
+      logoURI: BTC_TOKEN_LOGO_URI,
+      name: "tBTC v2",
+      symbol: "tBTC",
+      wrappedToken:{
+          address:ethers.constants.AddressZero,
+          chainId: 1851 ,
+      },
+    };
+  }else{
+    return {
+      address: chain.calcAddress,
+      chainId: chain.chainId,
+      decimals: 18,
+      logoURI: ETH_TOKEN_LOGO_URI,
+      name: "Ether",
+      symbol: "ETH",
+      wrappedToken:{
+          address:ethers.constants.AddressZero,
+          chainId:11155111,
+      },
+    };
+  }
+};
+
 export const getEtherToken = (chain: Chain): Token => {
-  return {
-    address: ethers.constants.AddressZero,
-    chainId: chain.chainId,
-    decimals: 18,
-    logoURI: ETH_TOKEN_LOGO_URI,
-    name: "Ether",
-    symbol: "ETH",
-  };
+  if (chain.key == "ethereum"){
+    return {
+      address: ethers.constants.AddressZero,
+      chainId: chain.chainId,
+      decimals: 18,
+      logoURI: ETH_TOKEN_LOGO_URI,
+      name: "Ether",
+      symbol: "ETH",
+      wrappedToken:{
+          address:chain.calcAddress,
+          chainId: 1851 ,
+      },
+    };
+  }else{
+    return {
+      address: ethers.constants.AddressZero,
+      chainId: chain.chainId,
+      decimals: 18,
+      logoURI: BTC_TOKEN_LOGO_URI,
+      name: "tBTC v2",
+      symbol: "tBTC",
+      wrappedToken:{
+          address:chain.btcAddress,
+          chainId:11155111,
+      },
+    };
+  }
 };
 
 export const getUsdcToken = ({
