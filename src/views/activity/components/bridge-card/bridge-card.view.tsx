@@ -1,4 +1,4 @@
-import { BigNumber } from "ethers";
+import { BigNumber,ethers } from "ethers";
 import { FC, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -6,6 +6,7 @@ import { getBatchNumberOfL2Block } from "src/adapters/ethereum";
 import { getCurrency } from "src/adapters/storage";
 import { ReactComponent as BridgeL1Icon } from "src/assets/icons/l1-bridge.svg";
 import { ReactComponent as BridgeL2Icon } from "src/assets/icons/l2-bridge.svg";
+import { BTC_TOKEN_LOGO_URI,ETH_TOKEN_LOGO_URI} from "src/constants";
 import { AsyncTask, Bridge, Env, PendingBridge } from "src/domain";
 import { routes } from "src/routes";
 import { formatFiatAmount, formatTokenAmount } from "src/utils/amounts";
@@ -16,6 +17,7 @@ import { Card } from "src/views/shared/card/card.view";
 import { ErrorMessage } from "src/views/shared/error-message/error-message.view";
 import { Icon } from "src/views/shared/icon/icon.view";
 import { Typography } from "src/views/shared/typography/typography.view";
+
 
 export interface BridgeCardProps {
   bridge: Bridge;
@@ -79,10 +81,20 @@ export const BridgeCard: FC<BridgeCardProps> = ({
   const onCardClick = (bridge: Exclude<Bridge, PendingBridge>) => {
     navigate(`${routes.bridgeDetails.path.split(":")[0]}${bridge.id}`);
   };
-
   const preferredCurrencySymbol = getCurrencySymbol(getCurrency());
 
-  const tokenAmountString = `${formatTokenAmount(amount, token)} ${token.symbol}`;
+  let tokenSymbol = token.symbol;
+  let logoURI = token.logoURI;
+  if(to.key !=="ethereum" ){
+    if (token.address === ethers.constants.AddressZero){
+      tokenSymbol = env.chains[1].nativeCurrency.symbol;
+      logoURI = BTC_TOKEN_LOGO_URI;
+    }else if (token.address === env.chains[0].btcAddress){
+      tokenSymbol = env.chains[0].nativeCurrency.symbol;
+      logoURI = ETH_TOKEN_LOGO_URI;
+    }
+  }
+  const tokenAmountString = `${formatTokenAmount(amount, token)} ${tokenSymbol}`;
 
   const fiatAmountString = showFiatAmount
     ? `${preferredCurrencySymbol}${fiatAmount ? formatFiatAmount(fiatAmount) : "--"}`
@@ -106,7 +118,7 @@ export const BridgeCard: FC<BridgeCardProps> = ({
 
   const BridgeAmount = (
     <div className={classes.token}>
-      <Icon className={classes.tokenIcon} isRounded size={20} url={token.logoURI} />
+      <Icon className={classes.tokenIcon} isRounded size={20} url={logoURI} />
       <Typography type="body1">{tokenAmountString}</Typography>
     </div>
   );
