@@ -144,13 +144,10 @@ export const BridgeForm: FC<BridgeFormProps> = ({ account, formData, onResetForm
     if (selectedChains && defaultTokens) {
       const { from } = selectedChains;
       let chainTokens = [...getChainCustomTokens(from), ...defaultTokens];
-      chainTokens.map((token,i)=>{
-          if(token.address === ethers.constants.AddressZero 
-            || token.wrappedToken?.address === ethers.constants.AddressZero){
-                chainTokens.splice(i,1)
-            }
-      });
-      chainTokens = [getEtherToken(from),getNativeErc20Token(from)]
+      chainTokens = chainTokens.filter((token)=>
+          token.address !== ethers.constants.AddressZero 
+            && token.wrappedToken?.address !== ethers.constants.AddressZero);
+      chainTokens = [getEtherToken(from),getNativeErc20Token(from),...chainTokens]
 
       setTokens(
         chainTokens.map((token) => ({
