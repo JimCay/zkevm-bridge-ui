@@ -5,7 +5,7 @@ import { ReactComponent as EthChainIcon } from "src/assets/icons/chains/ethereum
 import { ReactComponent as PolygonZkEVMChainIcon } from "src/assets/icons/chains/polygon-zkevm.svg";
 import { Chain, Currency, EthereumChain, ProviderError, Token, ZkEVMChain } from "src/domain";
 import { Bridge__factory } from "src/types/contracts/bridge";
-import { ProofOfEfficiency__factory } from "src/types/contracts/proof-of-efficiency";
+// import { ProofOfEfficiency__factory } from "src/types/contracts/proof-of-efficiency";
 import { getEthereumNetworkName } from "src/utils/labels";
 
 export const DAI_PERMIT_TYPEHASH =
@@ -95,16 +95,17 @@ export const getChains = ({
   polygonZkEVM: {
     bridgeContractAddress: string;
     explorerUrl: string;
+    name: string;
     networkId: number;
     rpcUrl: string;
   };
 }): Promise<[EthereumChain, ZkEVMChain]> => {
   const ethereumProvider = new StaticJsonRpcProvider(ethereum.rpcUrl);
   const polygonZkEVMProvider = new StaticJsonRpcProvider(polygonZkEVM.rpcUrl);
-  const poeContract = ProofOfEfficiency__factory.connect(
-    ethereum.poeContractAddress,
-    ethereumProvider
-  );
+  // const poeContract = ProofOfEfficiency__factory.connect(
+  //   ethereum.poeContractAddress,
+  //   ethereumProvider
+  // );
 
   const bridgeContract = Bridge__factory.connect(
     polygonZkEVM.bridgeContractAddress,
@@ -114,7 +115,6 @@ export const getChains = ({
   return Promise.all([
     ethereumProvider.getNetwork().catch(() => Promise.reject(ProviderError.Ethereum)),
     polygonZkEVMProvider.getNetwork().catch(() => Promise.reject(ProviderError.PolygonZkEVM)),
-    poeContract.networkName().catch(() => Promise.reject(ProviderError.Ethereum)),
     bridgeContract.precalculatedWrapperAddress(
       0,
       ethereum.btcAddress,
@@ -122,7 +122,7 @@ export const getChains = ({
       "ETH",
       18
     ).catch(() => Promise.reject(ProviderError.PolygonZkEVM)),
-  ]).then(([ethereumNetwork, polygonZkEVMNetwork, polygonZkEVMNetworkName,btcErc20]) => [
+  ]).then(([ethereumNetwork, polygonZkEVMNetwork,btcErc20]) => [
     {
       bridgeContractAddress: ethereum.bridgeContractAddress,
       btcAddress: ethereum.btcAddress,
@@ -149,11 +149,11 @@ export const getChains = ({
       explorerUrl: polygonZkEVM.explorerUrl,
       Icon: PolygonZkEVMChainIcon,
       key: "polygon-zkevm",
-      name: polygonZkEVMNetworkName,
+      name: polygonZkEVM.name ,
       nativeCurrency: {
         decimals: 18,
-        name: "tBTC v2",
-        symbol: "tBTC",
+        name: "BTC Token",
+        symbol: "BTC",
       },
       networkId: polygonZkEVM.networkId,
       provider: polygonZkEVMProvider,
@@ -211,8 +211,8 @@ export const getEtherToken = (chain: Chain): Token => {
       chainId: chain.chainId,
       decimals: 18,
       logoURI: BTC_TOKEN_LOGO_URI,
-      name: "tBTC v2",
-      symbol: "tBTC",
+      name: "BTC Token",
+      symbol: "BTC",
       wrappedToken:{
           address:chain.btcAddress,
           chainId:11155111,

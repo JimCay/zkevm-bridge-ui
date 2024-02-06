@@ -25,6 +25,7 @@ interface Env {
   VITE_OUTDATED_NETWORK_MODAL_URL?: string;
   VITE_POLYGON_ZK_EVM_BRIDGE_CONTRACT_ADDRESS: string;
   VITE_POLYGON_ZK_EVM_EXPLORER_URL: string;
+  VITE_POLYGON_ZK_EVM_NAME: string;
   VITE_POLYGON_ZK_EVM_NETWORK_ID: string;
   VITE_POLYGON_ZK_EVM_RPC_URL: string;
   VITE_REPORT_FORM_ERROR_ENTRY?: string;
@@ -174,6 +175,7 @@ const envToDomain = ({
   VITE_OUTDATED_NETWORK_MODAL_URL,
   VITE_POLYGON_ZK_EVM_BRIDGE_CONTRACT_ADDRESS,
   VITE_POLYGON_ZK_EVM_EXPLORER_URL,
+  VITE_POLYGON_ZK_EVM_NAME,
   VITE_POLYGON_ZK_EVM_NETWORK_ID,
   VITE_POLYGON_ZK_EVM_RPC_URL,
   VITE_REPORT_FORM_ERROR_ENTRY,
@@ -214,6 +216,7 @@ const envToDomain = ({
     polygonZkEVM: {
       bridgeContractAddress: VITE_POLYGON_ZK_EVM_BRIDGE_CONTRACT_ADDRESS,
       explorerUrl: VITE_POLYGON_ZK_EVM_EXPLORER_URL,
+      name: VITE_POLYGON_ZK_EVM_NAME,
       networkId: polygonZkEVMNetworkId,
       rpcUrl: VITE_POLYGON_ZK_EVM_RPC_URL,
     },
@@ -271,6 +274,7 @@ const envParser = StrictSchema<Env, domain.Env>()(
       VITE_OUTDATED_NETWORK_MODAL_URL: z.string().optional(),
       VITE_POLYGON_ZK_EVM_BRIDGE_CONTRACT_ADDRESS: z.string().length(42),
       VITE_POLYGON_ZK_EVM_EXPLORER_URL: z.string().url(),
+      VITE_POLYGON_ZK_EVM_NAME:z.string(),
       VITE_POLYGON_ZK_EVM_NETWORK_ID: z.string(),
       VITE_POLYGON_ZK_EVM_RPC_URL: z.string().url(),
       VITE_REPORT_FORM_ERROR_ENTRY: z.string().optional(),
