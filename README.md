@@ -1,7 +1,7 @@
 # zkEVM Bridge UI
 
 The zkEVM Bridge UI provides a simple user interface to bridge ETH 、BTC and your favorite ERC-20 tokens
-from Ethereum to the Bitcoinzk and back.
+from Ethereum to the BitcoinZK and back.
 
 ## Development
 

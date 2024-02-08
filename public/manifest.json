@@ -1,7 +1,7 @@
 {
 
-  "short_name": "Bitcoinzk Bridge",
-  "name": "Bitcoinzk Bridge",
+  "short_name": "BitcoinZK Bridge",
+  "name": "BitcoinZK Bridge",
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#000000",
