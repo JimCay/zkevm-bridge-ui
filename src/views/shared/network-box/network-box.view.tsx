@@ -66,7 +66,7 @@ export const NetworkBox: FC = () => {
   return (
     <Card>
       <div className={classes.networkBox}>
-        <Typography type="body1">{env.chains[1].name}</Typography>
+        <Typography type="body1">Add {env.chains[1].name}testnet to MetaMask</Typography>
         <ul className={classes.list}>
           <li className={classes.listItem}>
             <Typography type="body2">
@@ -113,15 +113,6 @@ export const NetworkBox: FC = () => {
             <MetaMaskIcon className={classes.buttonIcon} />
             Add to MetaMask
           </button>
-          <a
-            className={classes.button}
-            href={POLYGON_SUPPORT_URL}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <NewWindowIcon className={classes.buttonIcon} />
-            Report an issue
-          </a>
         </div>
       </div>
     </Card>

@@ -7,11 +7,13 @@ vite.config.ts.timestamp*
 # Editors
 .vscode/*
 
+/.history
+
 # Dependencies
 node_modules
 
 # Environment
-.env
+# .env
 
 # Artifacts
 dist
